@@ -1,19 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class Ip
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Ip
+ */
 class Ip extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute is not valid IP Address";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.ip';
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
      */
     public function check($value): bool

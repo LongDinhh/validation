@@ -1,40 +1,22 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation;
 
+/**
+ * Class Helper
+ *
+ * @package    Coccoc\Validation
+ * @subpackage Coccoc\Validation\Helper
+ */
 class Helper
 {
-
-    /**
-     * Determine if a given string matches a given pattern.
-     * Adapted from: https://github.com/illuminate/support/blob/v5.3.23/Str.php#L119
-     *
-     * @param  string $pattern
-     * @param  string $value
-     * @return bool
-     */
-    public static function strIs(string $pattern, string $value): bool
-    {
-        if ($pattern == $value) {
-            return true;
-        }
-
-        $pattern = preg_quote($pattern, '#');
-
-        // Asterisks are translated into zero-or-more regular expression wildcards
-        // to make it convenient to check if the strings starts with the given
-        // pattern such as "library/*", making any string check convenient.
-        $pattern = str_replace('\*', '.*', $pattern);
-
-        return (bool) preg_match('#^'.$pattern.'\z#u', $value);
-    }
-
     /**
      * Check if an item or items exist in an array using "dot" notation.
      * Adapted from: https://github.com/illuminate/support/blob/v5.3.23/Arr.php#L81
      *
-     * @param  array $array
-     * @param  string $key
+     * @param array $array
+     * @param string $key
+     *
      * @return bool
      */
     public static function arrayHas(array $array, string $key): bool
@@ -58,12 +40,13 @@ class Helper
      * Get an item from an array using "dot" notation.
      * Adapted from: https://github.com/illuminate/support/blob/v5.3.23/Arr.php#L246
      *
-     * @param  array       $array
-     * @param  string|null $key
-     * @param  mixed       $default
+     * @param array $array
+     * @param string|null $key
+     * @param mixed $default
+     *
      * @return mixed
      */
-    public static function arrayGet(array $array, $key, $default = null)
+    public static function arrayGet(array $array, ?string $key, $default = null)
     {
         if (is_null($key)) {
             return $array;
@@ -77,7 +60,7 @@ class Helper
             if (is_array($array) && array_key_exists($segment, $array)) {
                 $array = $array[$segment];
             } else {
-                return $default;
+                return is_callable($default) ? $default() : $default;
             }
         }
 
@@ -85,11 +68,12 @@ class Helper
     }
 
     /**
-     * Flatten a multi-dimensional associative array with dots.
+     * Flatten a multidimensional associative array with dots.
      * Adapted from: https://github.com/illuminate/support/blob/v5.3.23/Arr.php#L81
      *
-     * @param  array  $array
-     * @param  string $prepend
+     * @param array $array
+     * @param string $prepend
+     *
      * @return array
      */
     public static function arrayDot(array $array, string $prepend = ''): array
@@ -97,10 +81,10 @@ class Helper
         $results = [];
 
         foreach ($array as $key => $value) {
-            if (is_array($value) && ! empty($value)) {
-                $results = array_merge($results, static::arrayDot($value, $prepend.$key.'.'));
+            if (is_array($value) && !empty($value)) {
+                $results = array_merge($results, static::arrayDot($value, $prepend . $key . '.'));
             } else {
-                $results[$prepend.$key] = $value;
+                $results[$prepend . $key] = $value;
             }
         }
 
@@ -111,25 +95,27 @@ class Helper
      * Set an item on an array or object using dot notation.
      * Adapted from: https://github.com/illuminate/support/blob/v5.3.23/helpers.php#L437
      *
-     * @param mixed             $target
+     * @param mixed $target
      * @param string|array|null $key
-     * @param mixed             $value
-     * @param bool              $overwrite
+     * @param mixed $value
+     * @param bool $overwrite
+     *
      * @return mixed
      */
-    public static function arraySet(&$target, $key, $value, $overwrite = true): array
+    public static function arraySet(&$target, $key, $value, bool $overwrite = true): array
     {
         if (is_null($key)) {
             if ($overwrite) {
                 return $target = array_merge($target, $value);
             }
+
             return $target = array_merge($value, $target);
         }
 
         $segments = is_array($key) ? $key : explode('.', $key);
 
         if (($segment = array_shift($segments)) === '*') {
-            if (! is_array($target)) {
+            if (!is_array($target)) {
                 $target = [];
             }
 
@@ -144,12 +130,12 @@ class Helper
             }
         } elseif (is_array($target)) {
             if ($segments) {
-                if (! array_key_exists($segment, $target)) {
+                if (!array_key_exists($segment, $target)) {
                     $target[$segment] = [];
                 }
 
                 static::arraySet($target[$segment], $segments, $value, $overwrite);
-            } elseif ($overwrite || ! array_key_exists($segment, $target)) {
+            } elseif ($overwrite || !array_key_exists($segment, $target)) {
                 $target[$segment] = $value;
             }
         } else {
@@ -168,8 +154,9 @@ class Helper
     /**
      * Unset an item on an array or object using dot notation.
      *
-     * @param  mixed        $target
-     * @param  string|array $key
+     * @param mixed $target
+     * @param string|array $key
+     *
      * @return mixed
      */
     public static function arrayUnset(&$target, $key)
@@ -195,28 +182,29 @@ class Helper
     }
 
     /**
-     * Get snake_case format from given string
+     * Returns a string of comma separated values
      *
-     * @param  string $value
-     * @param  string $delimiter
+     * @param array $values
+     *
      * @return string
      */
-    public static function snakeCase(string $value, string $delimiter = '_'): string
+    public static function flattenValues(array $values): string
     {
-        if (! ctype_lower($value)) {
-            $value = preg_replace('/\s+/u', '', ucwords($value));
-            $value = strtolower(preg_replace('/(.)(?=[A-Z])/u', '$1'.$delimiter, $value));
-        }
-
-        return $value;
+        return implode(
+            ',',
+            array_map(static function ($value) {
+                return '"' . str_replace('"', '""', (string)$value) . '"';
+            }, $values)
+        );
     }
 
     /**
      * Join string[] to string with given $separator and $lastSeparator.
      *
-     * @param  array        $pieces
-     * @param  string       $separator
-     * @param  string|null  $lastSeparator
+     * @param array $pieces
+     * @param string $separator
+     * @param string|null $lastSeparator
+     *
      * @return string
      */
     public static function join(array $pieces, string $separator, string $lastSeparator = null): string
@@ -229,7 +217,7 @@ class Helper
 
         switch (count($pieces)) {
             case 0:
-                return $last ?: '';
+                return (string)$last ?: '';
             case 1:
                 return $pieces[0] . $lastSeparator . $last;
             default:
@@ -240,9 +228,10 @@ class Helper
     /**
      * Wrap string[] by given $prefix and $suffix
      *
-     * @param  array        $strings
-     * @param  string       $prefix
-     * @param  string|null  $suffix
+     * @param array $strings
+     * @param string $prefix
+     * @param string|null $suffix
+     *
      * @return array
      */
     public static function wraps(array $strings, string $prefix, string $suffix = null): array

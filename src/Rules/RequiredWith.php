@@ -1,46 +1,44 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
-use Coccoc\Validation\Rule;
-
+/**
+ * Class RequiredWith
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\RequiredWith
+ */
 class RequiredWith extends Required
 {
-    /** @var bool */
+    /**
+     * @var bool
+     */
     protected $implicit = true;
 
-    /** @var string */
-    protected $message = "The :attribute is required";
-
     /**
-     * Given $params and assign $this->params
-     *
-     * @param array $params
-     * @return self
+     * @var string
      */
-    public function fillParameters(array $params): Rule
+    protected $message = 'rule.required_with';
+
+    public function fillParameters(array $params): self
     {
         $this->params['fields'] = $params;
+
         return $this;
     }
 
-    /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
-     * @return bool
-     */
     public function check($value): bool
     {
-        $this->requireParameters(['fields']);
+        $this->assertHasRequiredParameters(['fields']);
+
         $fields = $this->parameter('fields');
-        $validator = $this->validation->getValidator();
-        $requiredValidator = $validator('required');
+        $requiredValidator = $this->validation->factory()->rule('required');
 
         foreach ($fields as $field) {
-            if ($this->validation->hasValue($field)) {
+            if ($this->validation->input()->has($field)) {
                 $this->setAttributeAsRequired();
-                return $requiredValidator->check($value, []);
+
+                return $requiredValidator->check($value);
             }
         }
 

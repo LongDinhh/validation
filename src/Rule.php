@@ -1,179 +1,121 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation;
 
-use Coccoc\Validation\MissingRequiredParameterException;
+use Coccoc\Validation\Exceptions\ParameterException;
 
+/**
+ * Class Rule
+ *
+ * @package    Coccoc\Validation
+ * @subpackage Coccoc\Validation\Rule
+ */
 abstract class Rule
 {
-    /** @var string */
-    protected $key;
+    /**
+     * @var string|null
+     */
+    protected $name = null;
 
-    /** @var \Coccoc\Validation\Attribute|null */
-    protected $attribute;
+    /**
+     * @var Attribute|null
+     */
+    protected $attribute = null;
 
-    /** @var \Coccoc\Validation\Validation|null */
-    protected $validation;
+    /**
+     * @var Validation|null
+     */
+    protected $validation = null;
 
-    /** @var bool */
+    /**
+     * @var bool
+     */
     protected $implicit = false;
 
-    /** @var array */
+    /**
+     * @var array
+     */
     protected $params = [];
 
-    /** @var array */
-    protected $paramsTexts = [];
-
-    /** @var array */
+    /**
+     * @var array
+     */
     protected $fillableParams = [];
 
-    /** @var string */
-    protected $message = "The :attribute is invalid";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.default';
 
+    /**
+     * @param $value
+     * @return bool
+     */
     abstract public function check($value): bool;
 
     /**
-     * Set Validation class instance
-     *
-     * @param \Coccoc\Validation\Validation $validation
-     * @return void
+     * @return Attribute|null
      */
-    public function setValidation(Validation $validation)
-    {
-        $this->validation = $validation;
-    }
-
-    /**
-     * Set key
-     *
-     * @param string $key
-     * @return void
-     */
-    public function setKey(string $key)
-    {
-        $this->key = $key;
-    }
-
-    /**
-     * Get key
-     *
-     * @return string
-     */
-    public function getKey()
-    {
-        return $this->key ?: get_class($this);
-    }
-
-    /**
-     * Set attribute
-     *
-     * @param \Coccoc\Validation\Attribute $attribute
-     * @return void
-     */
-    public function setAttribute(Attribute $attribute)
-    {
-        $this->attribute = $attribute;
-    }
-
-    /**
-     * Get attribute
-     *
-     * @return \Coccoc\Validation\Attribute|null
-     */
-    public function getAttribute()
+    public function attribute(): ?Attribute
     {
         return $this->attribute;
     }
 
     /**
-     * Get parameters
-     *
+     * @param Attribute $attribute
+     */
+    public function setAttribute(Attribute $attribute): void
+    {
+        $this->attribute = $attribute;
+    }
+
+    /**
+     * @param Validation $validation
+     */
+    public function setValidation(Validation $validation): void
+    {
+        $this->validation = $validation;
+    }
+
+    /**
      * @return array
      */
-    public function getParameters(): array
+    public function parameters(): array
     {
         return $this->params;
     }
 
     /**
-     * Set params
-     *
      * @param array $params
-     * @return \Coccoc\Validation\Rule
+     * @return $this
      */
-    public function setParameters(array $params): Rule
-    {
-        $this->params = array_merge($this->params, $params);
-        return $this;
-    }
-
-    /**
-     * Set parameters
-     *
-     * @param string $key
-     * @param mixed $value
-     * @return \Coccoc\Validation\Rule
-     */
-    public function setParameter(string $key, $value): Rule
-    {
-        $this->params[$key] = $value;
-        return $this;
-    }
-
-    /**
-     * Fill $params to $this->params
-     *
-     * @param array $params
-     * @return \Coccoc\Validation\Rule
-     */
-    public function fillParameters(array $params): Rule
+    public function fillParameters(array $params)
     {
         foreach ($this->fillableParams as $key) {
             if (empty($params)) {
                 break;
             }
+
             $this->params[$key] = array_shift($params);
         }
+
         return $this;
     }
 
     /**
-     * Get parameter from given $key, return null if it not exists
+     * Get parameter from given $key, return $default if it does not exist (null)
      *
      * @param string $key
-     * @return mixed
+     * @param null $default
+     * @return mixed|null
      */
-    public function parameter(string $key)
+    public function parameter(string $key, $default = null)
     {
-        return isset($this->params[$key])? $this->params[$key] : null;
+        return $this->params[$key] ?? $default;
     }
 
     /**
-     * Set parameter text that can be displayed in error message using ':param_key'
-     *
-     * @param string $key
-     * @param string $text
-     * @return void
-     */
-    public function setParameterText(string $key, string $text)
-    {
-        $this->paramsTexts[$key] = $text;
-    }
-
-    /**
-     * Get $paramsTexts
-     *
-     * @return array
-     */
-    public function getParametersTexts(): array
-    {
-        return $this->paramsTexts;
-    }
-
-    /**
-     * Check whether this rule is implicit
-     *
-     * @return boolean
+     * @return bool
      */
     public function isImplicit(): bool
     {
@@ -181,52 +123,67 @@ abstract class Rule
     }
 
     /**
-     * Just alias of setMessage
-     *
-     * @param string $message
-     * @return \Coccoc\Validation\Rule
+     * @return $this
      */
-    public function message(string $message): Rule
+    public function makeImplicit(): self
     {
-        return $this->setMessage($message);
-    }
+        $this->implicit = true;
 
-    /**
-     * Set message
-     *
-     * @param string $message
-     * @return \Coccoc\Validation\Rule
-     */
-    public function setMessage(string $message): Rule
-    {
-        $this->message = $message;
         return $this;
     }
 
     /**
-     * Get message
-     *
-     * @return string
+     * @param array $params
+     * @return ErrorMessage
      */
-    public function getMessage(): string
+    public function message(array $params = []): ErrorMessage
     {
-        return $this->message;
+        $params = array_merge(
+            [
+                'attribute' => $this->attribute->alias() ?? $this->attribute->key(),
+                'value' => $this->attribute->value()
+            ],
+            $this->convertParametersForMessage(),
+            $params
+        );
+
+        return new ErrorMessage($this->message, $params);
     }
 
     /**
-     * Check given $params must be exists
-     *
-     * @param array $params
-     * @return void
-     * @throws \Coccoc\Validation\MissingRequiredParameterException
+     * @return array
      */
-    protected function requireParameters(array $params)
+    protected function convertParametersForMessage(): array
+    {
+        return $this->params;
+    }
+
+    /**
+     * @param array $params
+     * @throws ParameterException
+     */
+    protected function assertHasRequiredParameters(array $params): void
     {
         foreach ($params as $param) {
             if (!isset($this->params[$param])) {
-                $rule = $this->getKey();
-                throw new MissingRequiredParameterException("Missing required parameter '{$param}' on rule '{$rule}'");
+                throw ParameterException::missing($this->name(), $param);
             }
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function name(): string
+    {
+        return $this->name ?: get_class($this);
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName(string $name): void
+    {
+        $this->name = $name;
     }
 }

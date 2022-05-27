@@ -1,6 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Coccoc\Validation\Tests;
+namespace Coccoc\Validation\Tests\Rules;
 
 use Coccoc\Validation\Rules\Url;
 use PHPUnit\Framework\TestCase;
@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 class UrlTest extends TestCase
 {
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->rule = new Url;
     }
@@ -29,16 +29,12 @@ class UrlTest extends TestCase
         $this->assertTrue($this->rule->fillParameters(['https'])->check('https://foobar.com'));
         $this->assertTrue($this->rule->fillParameters(['http', 'https'])->check('https://foobar.com'));
         $this->assertTrue($this->rule->fillParameters(['foo', 'bar'])->check('bar://foobar.com'));
-        $this->assertTrue($this->rule->fillParameters(['mailto'])->check('mailto:johndoe@gmail.com'));
-        $this->assertTrue($this->rule->fillParameters(['jdbc'])->check('jdbc:mysql://localhost/dbname'));
 
         // Using forScheme
         $this->assertTrue($this->rule->forScheme('ftp')->check('ftp://foobar.com'));
         $this->assertTrue($this->rule->forScheme('http')->check('http://foobar.com'));
         $this->assertTrue($this->rule->forScheme('https')->check('https://foobar.com'));
-        $this->assertTrue($this->rule->forScheme(['http', 'https'])->check('https://foobar.com'));
-        $this->assertTrue($this->rule->forScheme('mailto')->check('mailto:johndoe@gmail.com'));
-        $this->assertTrue($this->rule->forScheme('jdbc')->check('jdbc:mysql://localhost/dbname'));
+        $this->assertTrue($this->rule->forScheme('http', 'https')->check('https://foobar.com'));
     }
 
     public function testInvalids()
@@ -48,6 +44,6 @@ class UrlTest extends TestCase
         $this->assertFalse($this->rule->forScheme('mailto')->check('http://www.foobar.com'));
         $this->assertFalse($this->rule->forScheme('ftp')->check('http://www.foobar.com'));
         $this->assertFalse($this->rule->forScheme('jdbc')->check('http://www.foobar.com'));
-        $this->assertFalse($this->rule->forScheme(['http', 'https'])->check('any://www.foobar.com'));
+        $this->assertFalse($this->rule->forScheme('http', 'https')->check('any://www.foobar.com'));
     }
 }

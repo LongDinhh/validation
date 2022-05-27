@@ -1,31 +1,36 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
+use Coccoc\Validation\Rules\Behaviours\CanValidateFiles;
 
+/**
+ * Class Required
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Required
+ */
 class Required extends Rule
 {
-    use Traits\FileTrait;
-
-    /** @var bool */
-    protected $implicit = true;
-
-    /** @var string */
-    protected $message = "The :attribute is required";
+    use CanValidateFiles;
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
-     * @return bool
+     * @var bool
      */
+    protected $implicit = true;
+
+    /**
+     * @var string
+     */
+    protected $message = 'rule.required';
+
     public function check($value): bool
     {
         $this->setAttributeAsRequired();
 
-        if ($this->attribute and $this->attribute->hasRule('uploaded_file')) {
-            return $this->isValueFromUploadedFiles($value) and $value['error'] != UPLOAD_ERR_NO_FILE;
+        if ($this->attribute && $this->attribute->rules()->has('uploaded_file')) {
+            return $this->isValueFromUploadedFiles($value) && $value['error'] != UPLOAD_ERR_NO_FILE;
         }
 
         if (is_string($value)) {
@@ -34,18 +39,14 @@ class Required extends Rule
         if (is_array($value)) {
             return count($value) > 0;
         }
+
         return !is_null($value);
     }
 
-    /**
-     * Set attribute is required if $this->attribute is set
-     *
-     * @return void
-     */
-    protected function setAttributeAsRequired()
+    protected function setAttributeAsRequired(): void
     {
         if ($this->attribute) {
-            $this->attribute->setRequired(true);
+            $this->attribute->makeRequired();
         }
     }
 }

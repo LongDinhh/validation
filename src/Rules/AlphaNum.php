@@ -1,24 +1,29 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class AlphaNum
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\AlphaNum
+ */
 class AlphaNum extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute only allows alphabet and numeric";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.alpha_num';
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
      */
     public function check($value): bool
     {
-        if (! is_string($value) && ! is_numeric($value)) {
+        if (!is_string($value) && !is_numeric($value)) {
             return false;
         }
 

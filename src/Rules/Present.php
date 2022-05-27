@@ -1,39 +1,38 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class Present
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Present
+ */
 class Present extends Rule
 {
-    /** @var bool */
+    /**
+     * @var bool
+     */
     protected $implicit = true;
 
-    /** @var string */
-    protected $message = "The :attribute must be present";
-
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
-     * @return bool
+     * @var string
      */
+    protected $message = 'rule.present';
+
     public function check($value): bool
     {
         $this->setAttributeAsRequired();
 
-        return $this->validation->hasValue($this->attribute->getKey());
+        return $this->validation->input()->has($this->attribute->key());
     }
 
-    /**
-     * Set attribute is required if $this->attribute is set
-     *
-     * @return void
-     */
     protected function setAttributeAsRequired()
     {
         if ($this->attribute) {
-            $this->attribute->setRequired(true);
+            $this->attribute->makeRequired();
         }
     }
 }

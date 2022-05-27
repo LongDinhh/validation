@@ -1,31 +1,41 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
+use Coccoc\Validation\Rules\Behaviours\CanObtainSizeValue;
 
+/**
+ * Class Between
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Between
+ */
 class Between extends Rule
 {
-    use Traits\SizeTrait;
+    use CanObtainSizeValue;
 
-    /** @var string */
-    protected $message = "The :attribute must be between :min and :max";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.between';
 
-    /** @var array */
+    /**
+     * @var array
+     */
     protected $fillableParams = ['min', 'max'];
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
+     * @throws \Coccoc\Validation\Exceptions\ParameterException
      */
     public function check($value): bool
     {
-        $this->requireParameters($this->fillableParams);
+        $this->assertHasRequiredParameters($this->fillableParams);
 
-        $min = $this->getBytesSize($this->parameter('min'));
-        $max = $this->getBytesSize($this->parameter('max'));
+        $min = $this->getSizeInBytes($this->parameter('min'));
+        $max = $this->getSizeInBytes($this->parameter('max'));
 
         $valueSize = $this->getValueSize($value);
 

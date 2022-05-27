@@ -1,184 +1,76 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation;
 
+/**
+ * Class Attribute
+ *
+ * @package    Coccoc\Validation
+ * @subpackage Coccoc\Validation\Attribute
+ */
 class Attribute
 {
-
-    /** @var array */
-    protected $rules = [];
-
-    /** @var string */
-    protected $key;
-
-    /** @var string|null */
-    protected $alias;
-
-    /** @var \Coccoc\Validation\Validation */
-    protected $validation;
-
-    /** @var bool */
-    protected $required = false;
-
-    /** @var \Coccoc\Validation\Validation|null */
-    protected $primaryAttribute = null;
-
-    /** @var array */
-    protected $otherAttributes = [];
-
-    /** @var array */
-    protected $keyIndexes = [];
+    /**
+     * @var Validation $validation
+     */
+    private $validation;
 
     /**
-     * Constructor
-     *
-     * @param \Coccoc\Validation\Validation  $validation
-     * @param string      $key
+     * @var Attribute|null $parent
+     */
+    private $parent = null;
+
+    /**
+     * @var RuleBag $rules
+     */
+    private $rules;
+
+    /**
+     * @var string
+     */
+    private $key;
+
+    /**
+     * @var string|null
+     */
+    private $alias;
+
+    /**
+     * @var bool $required
+     */
+    private $required = false;
+
+    /**
+     * @var array
+     */
+    private $indexes = [];
+
+    /**
+     * Attribute constructor.
+     * @param Validation $validation
+     * @param string $key
      * @param string|null $alias
-     * @param array       $rules
-     * @return void
+     * @param array $rules
      */
     public function __construct(
         Validation $validation,
         string $key,
-        $alias = null,
+        string $alias = null,
         array $rules = []
     ) {
         $this->validation = $validation;
         $this->alias = $alias;
         $this->key = $key;
-        foreach ($rules as $rule) {
-            $this->addRule($rule);
-        }
+        $this->rules = new RuleBag($this, $rules);
     }
 
-    /**
-     * Set the primary attribute
-     *
-     * @param \Coccoc\Validation\Attribute $primaryAttribute
-     * @return void
-     */
-    public function setPrimaryAttribute(Attribute $primaryAttribute)
+    public function makeRequired(): void
     {
-        $this->primaryAttribute = $primaryAttribute;
+        $this->required = true;
     }
 
     /**
-     * Set key indexes
-     *
-     * @param array $keyIndexes
-     * @return void
-     */
-    public function setKeyIndexes(array $keyIndexes)
-    {
-        $this->keyIndexes = $keyIndexes;
-    }
-
-    /**
-     * Get primary attributes
-     *
-     * @return \Coccoc\Validation\Attribute|null
-     */
-    public function getPrimaryAttribute()
-    {
-        return $this->primaryAttribute;
-    }
-
-    /**
-     * Set other attributes
-     *
-     * @param array $otherAttributes
-     * @return void
-     */
-    public function setOtherAttributes(array $otherAttributes)
-    {
-        $this->otherAttributes = [];
-        foreach ($otherAttributes as $otherAttribute) {
-            $this->addOtherAttribute($otherAttribute);
-        }
-    }
-
-    /**
-     * Add other attributes
-     *
-     * @param \Coccoc\Validation\Attribute $otherAttribute
-     * @return void
-     */
-    public function addOtherAttribute(Attribute $otherAttribute)
-    {
-        $this->otherAttributes[] = $otherAttribute;
-    }
-
-    /**
-     * Get other attributes
-     *
-     * @return array
-     */
-    public function getOtherAttributes(): array
-    {
-        return $this->otherAttributes;
-    }
-
-    /**
-     * Add rule
-     *
-     * @param \Coccoc\Validation\Rule $rule
-     * @return void
-     */
-    public function addRule(Rule $rule)
-    {
-        $rule->setAttribute($this);
-        $rule->setValidation($this->validation);
-        $this->rules[$rule->getKey()] = $rule;
-    }
-
-    /**
-     * Get rule
-     *
-     * @param string $ruleKey
-     * @return void
-     */
-    public function getRule(string $ruleKey)
-    {
-        return $this->hasRule($ruleKey)? $this->rules[$ruleKey] : null;
-    }
-
-    /**
-     * Get rules
-     *
-     * @return array
-     */
-    public function getRules(): array
-    {
-        return $this->rules;
-    }
-
-    /**
-     * Check the $ruleKey has in the rule
-     *
-     * @param string $ruleKey
      * @return bool
-     */
-    public function hasRule(string $ruleKey): bool
-    {
-        return isset($this->rules[$ruleKey]);
-    }
-
-    /**
-     * Set required
-     *
-     * @param boolean $required
-     * @return void
-     */
-    public function setRequired(bool $required)
-    {
-        $this->required = $required;
-    }
-
-    /**
-     * Set rule is required
-     *
-     * @return boolean
      */
     public function isRequired(): bool
     {
@@ -186,124 +78,118 @@ class Attribute
     }
 
     /**
-     * Get key
-     *
+     * @return bool
+     */
+    public function isArrayAttribute(): bool
+    {
+        return count($this->indexes()) > 0;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function alias(): ?string
+    {
+        return $this->alias;
+    }
+
+    /**
+     * @return array
+     */
+    public function indexes(): array
+    {
+        return $this->indexes;
+    }
+
+    /**
+     * @param array $indexes
+     */
+    public function setIndexes(array $indexes): void
+    {
+        $this->indexes = $indexes;
+    }
+
+    /**
+     * @param string $key
      * @return string
      */
-    public function getKey(): string
+    private function resolveSiblingKey(string $key): string
+    {
+        $indexes = $this->indexes();
+        $keys = explode("*", $key);
+        $countAsterisks = count($keys) - 1;
+
+        if (count($indexes) < $countAsterisks) {
+            $indexes = array_merge($indexes, array_fill(0, $countAsterisks - count($indexes), "*"));
+        }
+
+        $args = array_merge([str_replace("*", "%s", $key)], $indexes);
+
+        return call_user_func_array('sprintf', $args);
+    }
+
+    /**
+     * @return string
+     */
+    public function key(): string
     {
         return $this->key;
     }
 
     /**
-     * Get key indexes
-     *
-     * @return array
+     * @return bool
      */
-    public function getKeyIndexes(): array
+    public function isUsingDotNotation(): bool
     {
-        return $this->keyIndexes;
+        return strpos($this->key(), '.') === 0;
     }
 
     /**
-     * Get value
-     *
-     * @param string|null $key
-     * @return mixed
+     * @return Attribute|null
      */
-    public function getValue(string $key = null)
+    public function parent(): ?Attribute
+    {
+        return $this->parent;
+    }
+
+    /**
+     * @param Attribute $parent
+     */
+    public function setParent(Attribute $parent): void
+    {
+        $this->parent = $parent;
+    }
+
+    /**
+     * @return RuleBag
+     */
+    public function rules(): RuleBag
+    {
+        return $this->rules;
+    }
+
+    /**
+     * @return Validation
+     */
+    public function validation(): Validation
+    {
+        return $this->validation;
+    }
+
+    /**
+     * @param string|null $key
+     * @return array|mixed
+     */
+    public function value(string $key = null)
     {
         if ($key && $this->isArrayAttribute()) {
             $key = $this->resolveSiblingKey($key);
         }
 
         if (!$key) {
-            $key = $this->getKey();
+            $key = $this->key();
         }
 
-        return $this->validation->getValue($key);
-    }
-
-    /**
-     * Get that is array attribute
-     *
-     * @return boolean
-     */
-    public function isArrayAttribute(): bool
-    {
-        return count($this->getKeyIndexes()) > 0;
-    }
-
-    /**
-     * Check this attribute is using dot notation
-     *
-     * @return boolean
-     */
-    public function isUsingDotNotation(): bool
-    {
-        return strpos($this->getKey(), '.') !== false;
-    }
-
-    /**
-     * Resolve sibling key
-     *
-     * @param string $key
-     * @return string
-     */
-    public function resolveSiblingKey(string $key): string
-    {
-        $indexes = $this->getKeyIndexes();
-        $keys = explode("*", $key);
-        $countAsterisks = count($keys) - 1;
-        if (count($indexes) < $countAsterisks) {
-            $indexes = array_merge($indexes, array_fill(0, $countAsterisks - count($indexes), "*"));
-        }
-        $args = array_merge([str_replace("*", "%s", $key)], $indexes);
-        return call_user_func_array('sprintf', $args);
-    }
-
-    /**
-     * Get humanize key
-     *
-     * @return string
-     */
-    public function getHumanizedKey()
-    {
-        $primaryAttribute = $this->getPrimaryAttribute();
-        $key = str_replace('_', ' ', $this->key);
-
-        // Resolve key from array validation
-        if ($primaryAttribute) {
-            $split = explode('.', $key);
-            $key = implode(' ', array_map(function ($word) {
-                if (is_numeric($word)) {
-                    $word = $word + 1;
-                }
-                return Helper::snakeCase($word, ' ');
-            }, $split));
-        }
-
-        return ucfirst($key);
-    }
-
-    /**
-     * Set alias
-     *
-     * @param string $alias
-     * @return void
-     */
-    public function setAlias(string $alias)
-    {
-        $this->alias = $alias;
-    }
-
-    /**
-     * Get alias
-     *
-     * @return string|null
-     */
-    public function getAlias()
-    {
-        return $this->alias;
+        return $this->validation->input()->get($key);
     }
 }

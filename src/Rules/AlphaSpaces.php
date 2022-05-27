@@ -1,24 +1,29 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class AlphaSpaces
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\AlphaSpaces
+ */
 class AlphaSpaces extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute may only allows alphabet and spaces";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.alpha_spaces';
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
      */
     public function check($value): bool
     {
-        if (! is_string($value)) {
+        if (!is_string($value)) {
             return false;
         }
 

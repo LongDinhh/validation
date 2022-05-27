@@ -1,50 +1,46 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
-use Coccoc\Validation\Rule;
-
+/**
+ * Class RequiredUnless
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\RequiredUnless
+ */
 class RequiredUnless extends Required
 {
-    /** @var bool */
+    /**
+     * @var bool
+     */
     protected $implicit = true;
 
-    /** @var string */
-    protected $message = "The :attribute is required";
-
     /**
-     * Given $params and assign the $this->params
-     *
-     * @param array $params
-     * @return self
+     * @var string
      */
-    public function fillParameters(array $params): Rule
+    protected $message = 'rule.required_unless';
+
+    public function fillParameters(array $params): self
     {
         $this->params['field'] = array_shift($params);
         $this->params['values'] = $params;
+
         return $this;
     }
 
-    /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
-     * @return bool
-     */
     public function check($value): bool
     {
-        $this->requireParameters(['field', 'values']);
+        $this->assertHasRequiredParameters(['field', 'values']);
 
         $anotherAttribute = $this->parameter('field');
         $definedValues = $this->parameter('values');
-        $anotherValue = $this->getAttribute()->getValue($anotherAttribute);
-
-        $validator = $this->validation->getValidator();
-        $requiredValidator = $validator('required');
+        $anotherValue = $this->attribute()->value($anotherAttribute);
+        $requiredValidator = $this->validation->factory()->rule('required');
 
         if (!in_array($anotherValue, $definedValues)) {
             $this->setAttributeAsRequired();
-            return $requiredValidator->check($value, []);
+
+            return $requiredValidator->check($value);
         }
 
         return true;

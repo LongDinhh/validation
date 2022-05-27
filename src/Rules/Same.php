@@ -1,30 +1,40 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class Same
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Same
+ */
 class Same extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute must be same with :field";
-
-    /** @var array */
-    protected $fillableParams = ['field'];
+    /**
+     * @var string
+     */
+    protected $message = 'rule.same';
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
-     * @return bool
+     * @var array
      */
+    protected $fillableParams = ['field'];
+
+    public function field(string $field): self
+    {
+        $this->params['field'] = $field;
+
+        return $this;
+    }
+
     public function check($value): bool
     {
-        $this->requireParameters($this->fillableParams);
+        $this->assertHasRequiredParameters($this->fillableParams);
 
         $field = $this->parameter('field');
-        $anotherValue = $this->getAttribute()->getValue($field);
+        $anotherValue = $this->attribute()->value($field);
 
         return $value == $anotherValue;
     }

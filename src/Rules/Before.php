@@ -1,38 +1,43 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
+use Coccoc\Validation\Rules\Behaviours\CanValidateDates;
 
+/**
+ * Class Before
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Before
+ */
 class Before extends Rule
 {
-    use Traits\DateUtilsTrait;
+    use CanValidateDates;
 
-    /** @var string */
-    protected $message = "The :attribute must be a date before :time.";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.before';
 
-    /** @var array */
+    /**
+     * @var array
+     */
     protected $fillableParams = ['time'];
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
-     * @throws \Exception
+     * @throws \Coccoc\Validation\Exceptions\ParameterException
      */
     public function check($value): bool
     {
-        $this->requireParameters($this->fillableParams);
+        $this->assertHasRequiredParameters($this->fillableParams);
+
         $time = $this->parameter('time');
 
-        if (!$this->isValidDate($value)) {
-            throw $this->throwException($value);
-        }
-
-        if (!$this->isValidDate($time)) {
-            throw $this->throwException($time);
-        }
+        $this->assertDate($value);
+        $this->assertDate($time);
 
         return $this->getTimeStamp($time) > $this->getTimeStamp($value);
     }

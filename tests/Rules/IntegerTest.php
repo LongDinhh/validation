@@ -1,16 +1,16 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Coccoc\Validation\Tests;
+namespace Coccoc\Validation\Tests\Rules;
 
-use Coccoc\Validation\Rules\Integer;
+use Coccoc\Validation\Rules\TypeInteger;
 use PHPUnit\Framework\TestCase;
 
 class IntegerTest extends TestCase
 {
 
-    public function setUp()
+    public function setUp(): void
     {
-        $this->rule = new Integer;
+        $this->rule = new TypeInteger;
     }
 
     public function testValids()

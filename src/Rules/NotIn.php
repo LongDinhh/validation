@@ -1,61 +1,61 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Helper;
 use Coccoc\Validation\Rule;
 
+/**
+ * Class NotIn
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\NotIn
+ */
 class NotIn extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute is not allowing :disallowed_values";
-
-    /** @var bool */
-    protected $strict = false;
+    /**
+     * @var string
+     */
+    protected $message = 'rule.not_in';
 
     /**
-     * Given $params and assign the $this->params
-     *
-     * @param array $params
-     * @return self
+     * @var bool
      */
-    public function fillParameters(array $params): Rule
+    protected $strict = false;
+
+    public static function make(array $values): string
     {
-        if (count($params) == 1 and is_array($params[0])) {
+        return sprintf('not_in:%s', Helper::flattenValues($values));
+    }
+
+    public function fillParameters(array $params): self
+    {
+        if (count($params) == 1 && is_array($params[0])) {
             $params = $params[0];
         }
         $this->params['disallowed_values'] = $params;
+
         return $this;
     }
 
-    /**
-     * Set strict value
-     *
-     * @param bool $strict
-     * @return void
-     */
-    public function strict($strict = true)
+    public function values(array $values): self
     {
-        $this->strict = $strict;
+        $this->params['disallowed_values'] = $values;
+
+        return $this;
     }
 
-    /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
-     * @return bool
-     */
+    public function strict(bool $strict = true): self
+    {
+        $this->strict = $strict;
+
+        return $this;
+    }
+
     public function check($value): bool
     {
-        $this->requireParameters(['disallowed_values']);
+        $this->assertHasRequiredParameters(['disallowed_values']);
 
-        $disallowedValues = (array) $this->parameter('disallowed_values');
-
-        $and = $this->validation ? $this->validation->getTranslation('and') : 'and';
-        $disallowedValuesText = Helper::join(Helper::wraps($disallowedValues, "'"), ', ', ", {$and} ");
-        $this->setParameterText('disallowed_values', $disallowedValuesText);
-
-        return !in_array($value, $disallowedValues, $this->strict);
+        return !in_array($value, (array)$this->parameter('disallowed_values'), $this->strict);
     }
 }

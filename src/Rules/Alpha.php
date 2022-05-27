@@ -1,19 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class Alpha
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Alpha
+ */
 class Alpha extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute only allows alphabet characters";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.alpha';
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
      */
     public function check($value): bool

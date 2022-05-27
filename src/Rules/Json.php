@@ -1,24 +1,25 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class Json
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Json
+ */
 class Json extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute must be a valid JSON string";
-
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
-     * @return bool
+     * @var string
      */
+    protected $message = 'rule.json';
+
     public function check($value): bool
     {
-        if (! is_string($value) || empty($value)) {
+        if (!is_string($value) || empty($value)) {
             return false;
         }
 

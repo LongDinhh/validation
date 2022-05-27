@@ -1,19 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class Email
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Email
+ */
 class Email extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute is not valid email";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.email';
 
     /**
-     * Check $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
      */
     public function check($value): bool

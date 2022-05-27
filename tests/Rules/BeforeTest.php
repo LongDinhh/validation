@@ -1,7 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Coccoc\Validation\Tests;
+namespace Coccoc\Validation\Tests\Rules;
 
+use Coccoc\Validation\Exceptions\ParameterException;
 use Coccoc\Validation\Rules\Before;
 use PHPUnit\Framework\TestCase;
 use DateTime;
@@ -10,11 +11,11 @@ class BeforeTest extends TestCase
 {
 
     /**
-     * @var \Coccoc\Validation\Rules\Before
+     * @var Before
      */
     protected $validator;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->validator = new Before();
     }
@@ -34,7 +35,7 @@ class BeforeTest extends TestCase
         $now = new DateTime();
 
         return [
-            [2016],
+            ['2016'],
             [$now->format("Y-m-d")],
             [$now->format("Y-m-d h:i:s")],
             ["now"],
@@ -45,10 +46,11 @@ class BeforeTest extends TestCase
 
     /**
      * @dataProvider getInvalidDates
-     * @expectedException \Exception
      */
     public function testANonWellFormedDateCannotBeValidated($date)
     {
+        $this->expectException(ParameterException::class);
+
         $this->validator->fillParameters(["tomorrow"])->check($date);
     }
 
@@ -57,7 +59,7 @@ class BeforeTest extends TestCase
         $now = new DateTime();
 
         return [
-            [12], //12 instead of 2012
+            ['12'], //12 instead of 2012
             ["09"], //like '09 instead of 2009
             [$now->format("Y m d")],
             [$now->format("Y m d h:i:s")],
@@ -68,7 +70,6 @@ class BeforeTest extends TestCase
 
     public function testProvidedDateFailsValidation()
     {
-
         $now = (new DateTime("today"))->format("Y-m-d");
         $today = "today";
 
@@ -81,11 +82,10 @@ class BeforeTest extends TestCase
         );
     }
 
-    /**
-     * @expectedException \Exception
-     */
     public function testUserProvidedParamCannotBeValidatedBecauseItIsInvalid()
     {
+        $this->expectException(ParameterException::class);
+
         $this->validator->fillParameters(["to,morrow"])->check("now");
     }
 }

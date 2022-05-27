@@ -1,61 +1,83 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Helper;
 use Coccoc\Validation\Rule;
 
+/**
+ * Class In
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\In
+ */
 class In extends Rule
 {
+    /**
+     * @var string
+     */
+    protected $message = 'rule.in';
 
-    /** @var string */
-    protected $message = "The :attribute only allows :allowed_values";
-
-    /** @var bool */
+    /**
+     * @var bool
+     */
     protected $strict = false;
 
     /**
-     * Given $params and assign the $this->params
-     *
-     * @param array $params
-     * @return self
+     * @param array $values
+     * @return string
      */
-    public function fillParameters(array $params): Rule
+    public static function make(array $values): string
+    {
+        return sprintf('in:%s', Helper::flattenValues($values));
+    }
+
+    /**
+     * @param array $params
+     * @return $this
+     */
+    public function fillParameters(array $params): self
     {
         if (count($params) == 1 && is_array($params[0])) {
             $params = $params[0];
         }
+
         $this->params['allowed_values'] = $params;
+
         return $this;
     }
 
     /**
-     * Set strict value
-     *
-     * @param bool $strict
-     * @return void
+     * @param array $values
+     * @return $this
      */
-    public function strict(bool $strict = true)
+    public function values(array $values): self
     {
-        $this->strict = $strict;
+        $this->params['allowed_values'] = $values;
+
+        return $this;
     }
 
     /**
-     * Check $value is existed
-     *
-     * @param mixed $value
+     * @param bool $strict
+     * @return $this
+     */
+    public function strict(bool $strict = true): self
+    {
+        $this->strict = $strict;
+
+        return $this;
+    }
+
+    /**
+     * @param $value
      * @return bool
+     * @throws \Coccoc\Validation\Exceptions\ParameterException
      */
     public function check($value): bool
     {
-        $this->requireParameters(['allowed_values']);
+        $this->assertHasRequiredParameters(['allowed_values']);
 
-        $allowedValues = $this->parameter('allowed_values');
-
-        $or = $this->validation ? $this->validation->getTranslation('or') : 'or';
-        $allowedValuesText = Helper::join(Helper::wraps($allowedValues, "'"), ', ', ", {$or} ");
-        $this->setParameterText('allowed_values', $allowedValuesText);
-
-        return in_array($value, $allowedValues, $this->strict);
+        return in_array($value, $this->parameter('allowed_values'), $this->strict);
     }
 }

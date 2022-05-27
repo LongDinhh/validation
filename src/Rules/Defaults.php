@@ -1,35 +1,43 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
-use Coccoc\Validation\Rules\Interfaces\ModifyValue;
+use Coccoc\Validation\Rules\Contracts\ModifyValue;
 
+/**
+ * Class Defaults
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Defaults
+ */
 class Defaults extends Rule implements ModifyValue
 {
+    /**
+     * @var string
+     */
+    protected $message = 'rule.default_value';
 
-    /** @var string */
-    protected $message = "The :attribute default is :default";
-
-    /** @var array */
+    /**
+     * @var array
+     */
     protected $fillableParams = ['default'];
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
+     * @throws \Coccoc\Validation\Exceptions\ParameterException
      */
     public function check($value): bool
     {
-        $this->requireParameters($this->fillableParams);
+        $this->assertHasRequiredParameters($this->fillableParams);
 
-        $default = $this->parameter('default');
         return true;
     }
 
     /**
-     * {@inheritDoc}
+     * @param $value
+     * @return mixed|null
      */
     public function modifyValue($value)
     {
@@ -37,14 +45,11 @@ class Defaults extends Rule implements ModifyValue
     }
 
     /**
-     * Check $value is empty value
-     *
-     * @param mixed $value
-     * @return boolean
+     * @param $value
+     * @return bool
      */
     protected function isEmptyValue($value): bool
     {
-        $requiredValidator = new Required;
-        return false === $requiredValidator->check($value, []);
+        return false === (new Required)->check($value);
     }
 }

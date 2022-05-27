@@ -1,50 +1,53 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
-use Coccoc\Validation\Helper;
 use Coccoc\Validation\Rule;
 
+/**
+ * Class Extension
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Extension
+ */
 class Extension extends Rule
 {
-    
-    /** @var string */
-    protected $message = "The :attribute must be a :allowed_extensions file";
-
-     /**
-     * Given $params and assign the $this->params
-     *
-     * @param array $params
-     * @return self
+    /**
+     * @var string
      */
-    public function fillParameters(array $params): Rule
+    protected $message = 'rule.extension';
+
+    /**
+     * @param array $params
+     * @return $this
+     */
+    public function fillParameters(array $params): self
     {
         if (count($params) == 1 && is_array($params[0])) {
             $params = $params[0];
         }
         $this->params['allowed_extensions'] = $params;
+
         return $this;
     }
-    
+
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
+     * @throws \Coccoc\Validation\Exceptions\ParameterException
      */
     public function check($value): bool
     {
-        $this->requireParameters(['allowed_extensions']);
+        $this->assertHasRequiredParameters(['allowed_extensions']);
+
         $allowedExtensions = $this->parameter('allowed_extensions');
+
         foreach ($allowedExtensions as $key => $ext) {
             $allowedExtensions[$key] = ltrim($ext, '.');
         }
 
-        $or = $this->validation ? $this->validation->getTranslation('or') : 'or';
-        $allowedExtensionsText = Helper::join(Helper::wraps($allowedExtensions, ".", ""), ', ', ", {$or} ");
-        $this->setParameterText('allowed_extensions', $allowedExtensionsText);
-
         $ext = strtolower(pathinfo($value, PATHINFO_EXTENSION));
-        return ($ext && in_array($ext, $allowedExtensions)) ? true : false;
+
+        return $ext && in_array($ext, $allowedExtensions);
     }
 }

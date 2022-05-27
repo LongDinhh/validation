@@ -1,30 +1,36 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
+use Coccoc\Validation\Rules\Behaviours\CanObtainSizeValue;
 
+/**
+ * Class Max
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Max
+ */
 class Max extends Rule
 {
-    use Traits\SizeTrait;
+    use CanObtainSizeValue;
 
-    /** @var string */
-    protected $message = "The :attribute maximum is :max";
-
-    /** @var array */
-    protected $fillableParams = ['max'];
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
-     * @return bool
+     * @var string
      */
+    protected $message = 'rule.max';
+
+    /**
+     * @var array
+     */
+    protected $fillableParams = ['max'];
+
     public function check($value): bool
     {
-        $this->requireParameters($this->fillableParams);
+        $this->assertHasRequiredParameters($this->fillableParams);
 
-        $max = $this->getBytesSize($this->parameter('max'));
+        $max = $this->getSizeInBytes($this->parameter('max'));
         $valueSize = $this->getValueSize($value);
 
         if (!is_numeric($valueSize)) {

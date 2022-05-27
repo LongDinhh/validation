@@ -1,58 +1,64 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
-use Coccoc\Validation\Rule;
-use InvalidArgumentException;
 use Closure;
+use InvalidArgumentException;
+use Coccoc\Validation\Rule;
 
+/**
+ * Class Callback
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Callback
+ */
 class Callback extends Rule
 {
+    /**
+     * @var string
+     */
+    protected $message = 'rule.default';
 
-    /** @var string */
-    protected $message = "The :attribute is not valid";
-
-    /** @var array */
+    /**
+     * @var array
+     */
     protected $fillableParams = ['callback'];
 
     /**
-     * Set the Callback closure
-     *
      * @param Closure $callback
-     * @return self
+     * @return $this
      */
-    public function setCallback(Closure $callback): Rule
+    public function through(Closure $callback): self
     {
-        return $this->setParameter('callback', $callback);
+        $this->params['callback'] = $callback;
+
+        return $this;
     }
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
-     * @throws \Exception
+     * @throws \Coccoc\Validation\Exceptions\ParameterException
      */
     public function check($value): bool
     {
-        $this->requireParameters($this->fillableParams);
+        $this->assertHasRequiredParameters($this->fillableParams);
 
         $callback = $this->parameter('callback');
-        if (false === $callback instanceof Closure) {
-            $key = $this->attribute->getKey();
-            throw new InvalidArgumentException("Callback rule for '{$key}' is not callable.");
+
+        if (!$callback instanceof Closure) {
+            throw new InvalidArgumentException(sprintf('Callback rule for "%s" is not callable.', $this->attribute->key()));
         }
 
         $callback = $callback->bindTo($this);
         $invalidMessage = $callback($value);
 
         if (is_string($invalidMessage)) {
-            $this->setMessage($invalidMessage);
-            return false;
-        } elseif (false === $invalidMessage) {
+            $this->message = $invalidMessage;
+
             return false;
         }
 
-        return true;
+        return $invalidMessage;
     }
 }

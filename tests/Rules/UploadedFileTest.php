@@ -1,6 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Coccoc\Validation\Tests;
+namespace Coccoc\Validation\Tests\Rules;
 
 use Coccoc\Validation\Rules\UploadedFile;
 use PHPUnit\Framework\TestCase;
@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 class UploadedFileTest extends TestCase
 {
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->rule = new UploadedFile();
     }
@@ -24,7 +24,7 @@ class UploadedFileTest extends TestCase
         ];
 
         $uploadedFileRule = $this->getMockBuilder(UploadedFile::class)
-            ->setMethods(['isUploadedFile'])
+            ->onlyMethods(['isUploadedFile'])
             ->getMock();
 
         $uploadedFileRule->expects($this->once())
@@ -76,7 +76,7 @@ class UploadedFileTest extends TestCase
     public function testMaxSize()
     {
         $rule = $this->getMockBuilder(UploadedFile::class)
-            ->setMethods(['isUploadedFile'])
+            ->onlyMethods(['isUploadedFile'])
             ->getMock();
 
         $rule->expects($this->exactly(2))
@@ -105,7 +105,7 @@ class UploadedFileTest extends TestCase
     public function testMinSize()
     {
         $rule = $this->getMockBuilder(UploadedFile::class)
-            ->setMethods(['isUploadedFile'])
+            ->onlyMethods(['isUploadedFile'])
             ->getMock();
 
         $rule->expects($this->exactly(2))
@@ -134,14 +134,14 @@ class UploadedFileTest extends TestCase
     public function testFileTypes()
     {
         $rule = $this->getMockBuilder(UploadedFile::class)
-            ->setMethods(['isUploadedFile'])
+            ->onlyMethods(['isUploadedFile'])
             ->getMock();
 
         $rule->expects($this->exactly(3))
             ->method('isUploadedFile')
             ->willReturn(true);
 
-        $rule->fileTypes('png|jpeg');
+        $rule->types('png,jpeg');
 
         $this->assertFalse($rule->check([
             'name' => pathinfo(__FILE__, PATHINFO_BASENAME),

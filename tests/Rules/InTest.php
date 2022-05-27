@@ -1,14 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Coccoc\Validation\Tests;
+namespace Coccoc\Validation\Tests\Rules;
 
+use Coccoc\Validation\Factory;
 use Coccoc\Validation\Rules\In;
 use PHPUnit\Framework\TestCase;
 
 class InTest extends TestCase
 {
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->rule = new In;
     }
@@ -34,5 +35,17 @@ class InTest extends TestCase
         $this->rule->strict();
         $this->assertFalse($this->rule->fillParameters(['1', '2', '3'])->check(1));
         $this->assertFalse($this->rule->fillParameters(['1', '2', '3'])->check(1));
+    }
+
+    public function testWithCommasInStrings()
+    {
+        $validator = new Factory();
+
+        $res = $validator->validate(
+            ['foo' => 'there\'s something'],
+            ['foo' => 'in:"there\'s something",that,another,"value\'s here"']
+        );
+
+        $this->assertTrue($res->passes());
     }
 }

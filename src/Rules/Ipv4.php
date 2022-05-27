@@ -1,19 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class Ipv4
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Ipv4
+ */
 class Ipv4 extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute is not valid IPv4 Address";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.ipv4';
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
      */
     public function check($value): bool

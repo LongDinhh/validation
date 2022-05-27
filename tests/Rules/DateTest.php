@@ -1,6 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Coccoc\Validation\Tests;
+namespace Coccoc\Validation\Tests\Rules;
 
 use Coccoc\Validation\Rules\Date;
 use PHPUnit\Framework\TestCase;
@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 class DateTest extends TestCase
 {
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->rule = new Date;
     }
@@ -23,5 +23,11 @@ class DateTest extends TestCase
     {
         $this->assertFalse($this->rule->check("10-10-2010"));
         $this->assertFalse($this->rule->fillParameters(['Y-m-d'])->check("2010-10-10 10:10"));
+    }
+
+    public function testNull()
+    {
+        $this->assertFalse($this->rule->check(null));
+        $this->assertFalse($this->rule->check(''));
     }
 }

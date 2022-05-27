@@ -1,11 +1,18 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation;
 
-class MimeTypeGuesser
+/**
+ * Class MimeTypeGuesser
+ *
+ * @package    Coccoc\Validation
+ * @subpackage Coccoc\Validation\MimeTypeGuesser
+ */
+class MimeTypeGuesser implements Contracts\MimeTypeGuesser
 {
-
-    /** @var array */
+    /**
+     * @var string[]
+     */
     protected $mimeTypes = [
         'application/andrew-inset' => 'ez',
         'application/applixware' => 'aw',
@@ -776,29 +783,33 @@ class MimeTypeGuesser
         'video/x-msvideo' => 'avi',
         'video/x-sgi-movie' => 'movie',
         'video/x-smv' => 'smv',
-        'x-conference/x-cooltalk' => 'ice'
+        'x-conference/x-cooltalk' => 'ice',
     ];
 
     /**
-     * Get extension by mime type
-     *
      * @param string $mimeType
      * @return string|null
      */
-    public function getExtension(string $mimeType)
+    public function getExtension(string $mimeType): ?string
     {
-        return isset($this->mimeTypes[$mimeType])? $this->mimeTypes[$mimeType] : null;
+        return $this->mimeTypes[$mimeType] ?? null;
     }
 
     /**
-     * Get mime type by extension
-     *
      * @param string $extension
-     * @return string|null
+     * @return string
      */
-    public function getMimeType(string $extension)
+    public function getMimeType(string $extension): string
     {
-        $key = array_search($extension, $this->mimeTypes);
-        return $key ?: null;
+        return array_search($extension, $this->mimeTypes) ?: 'application/octet-stream';
+    }
+
+    /**
+     * @param string $extension
+     * @param string $mimeType
+     */
+    public function addMimeType(string $extension, string $mimeType): void
+    {
+        $this->mimeTypes[$mimeType] = $extension;
     }
 }

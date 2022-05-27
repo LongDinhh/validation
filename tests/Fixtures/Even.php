@@ -1,12 +1,21 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Coccoc\Validation\Tests;
+namespace Coccoc\Validation\Tests\Fixtures;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class Even
+ *
+ * @package    Coccoc\Validation\Tests\Fixtures
+ * @subpackage Coccoc\Validation\Tests\Fixtures\Even
+ */
 class Even extends Rule
 {
 
+    /**
+     * @var string
+     */
     protected $message = "The :attribute must be even";
 
     public function check($value): bool

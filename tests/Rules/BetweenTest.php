@@ -1,14 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Coccoc\Validation\Tests;
+namespace Coccoc\Validation\Tests\Rules;
 
 use Coccoc\Validation\Rules\Between;
 use PHPUnit\Framework\TestCase;
 
 class BetweenTest extends TestCase
 {
+    private ?Between $rule = null;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->rule = new Between;
     }

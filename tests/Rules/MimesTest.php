@@ -1,14 +1,13 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Coccoc\Validation\Tests;
+namespace Coccoc\Validation\Tests\Rules;
 
 use Coccoc\Validation\Rules\Mimes;
 use PHPUnit\Framework\TestCase;
 
 class MimesTest extends TestCase
 {
-
-    public function setUp()
+    public function setUp(): void
     {
         $this->rule = new Mimes();
     }
@@ -24,7 +23,7 @@ class MimesTest extends TestCase
         ];
 
         $uploadedFileRule = $this->getMockBuilder(Mimes::class)
-            ->setMethods(['isUploadedFile'])
+            ->onlyMethods(['isUploadedFile'])
             ->getMock();
 
         $uploadedFileRule->expects($this->once())
@@ -77,14 +76,14 @@ class MimesTest extends TestCase
     {
 
         $rule = $this->getMockBuilder(Mimes::class)
-            ->setMethods(['isUploadedFile'])
+            ->onlyMethods(['isUploadedFile'])
             ->getMock();
 
         $rule->expects($this->exactly(3))
             ->method('isUploadedFile')
             ->willReturn(true);
 
-        $rule->allowTypes('png|jpeg');
+        $rule->types('png,jpeg');
 
         $this->assertFalse($rule->check([
             'name' => pathinfo(__FILE__, PATHINFO_BASENAME),

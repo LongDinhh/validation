@@ -1,12 +1,18 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Tests;
 
 use Coccoc\Validation\Validation;
-use Coccoc\Validation\Validator;
+use Coccoc\Validation\Factory;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
+/**
+ * Class ValidationTest
+ *
+ * @package    Coccoc\Validation\Tests
+ * @subpackage Coccoc\Validation\Tests\ValidationTest
+ */
 class ValidationTest extends TestCase
 {
     /**
@@ -21,16 +27,13 @@ class ValidationTest extends TestCase
         $method = $class->getMethod('parseRule');
         $method->setAccessible(true);
 
-        $validation = new Validation(new Validator(), [], []);
+        $validation = new Validation(new Factory(), [], []);
 
         $result = $method->invokeArgs($validation, [$rules]);
         $this->assertSame($expectedResult, $result);
     }
 
-    /**
-     * @return array
-     */
-    public function parseRuleProvider()
+    public function parseRuleProvider(): array
     {
         return [
             [

@@ -1,39 +1,43 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
+use Coccoc\Validation\Rules\Behaviours\CanValidateDates;
 
+/**
+ * Class After
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\After
+ */
 class After extends Rule
 {
+    use CanValidateDates;
 
-    use Traits\DateUtilsTrait;
+    /**
+     * @var string
+     */
+    protected $message = 'rule.after';
 
-    /** @var string */
-    protected $message = "The :attribute must be a date after :time.";
-
-    /** @var array */
+    /**
+     * @var array
+     */
     protected $fillableParams = ['time'];
 
     /**
-     * Check the value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
-     * @throws \Exception
+     * @throws \Coccoc\Validation\Exceptions\ParameterException
      */
     public function check($value): bool
     {
-        $this->requireParameters($this->fillableParams);
+        $this->assertHasRequiredParameters($this->fillableParams);
+
         $time = $this->parameter('time');
 
-        if (!$this->isValidDate($value)) {
-            throw $this->throwException($value);
-        }
-
-        if (!$this->isValidDate($time)) {
-            throw $this->throwException($time);
-        }
+        $this->assertDate($value);
+        $this->assertDate($time);
 
         return $this->getTimeStamp($time) < $this->getTimeStamp($value);
     }

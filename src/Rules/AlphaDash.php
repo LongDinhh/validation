@@ -1,24 +1,29 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
 
+/**
+ * Class AlphaDash
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\AlphaDash
+ */
 class AlphaDash extends Rule
 {
-
-    /** @var string */
-    protected $message = "The :attribute only allows a-z, 0-9, _ and -";
+    /**
+     * @var string
+     */
+    protected $message = 'rule.alpha_dash';
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
+     * @param $value
      * @return bool
      */
     public function check($value): bool
     {
-        if (! is_string($value) && ! is_numeric($value)) {
+        if (!is_string($value) && !is_numeric($value)) {
             return false;
         }
 

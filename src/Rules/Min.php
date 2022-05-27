@@ -1,30 +1,35 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation\Rules;
 
 use Coccoc\Validation\Rule;
+use Coccoc\Validation\Rules\Behaviours\CanObtainSizeValue;
 
+/**
+ * Class Min
+ *
+ * @package    Coccoc\Validation\Rules
+ * @subpackage Coccoc\Validation\Rules\Min
+ */
 class Min extends Rule
 {
-    use Traits\SizeTrait;
-
-    /** @var string */
-    protected $message = "The :attribute minimum is :min";
-
-    /** @var array */
-    protected $fillableParams = ['min'];
+    use CanObtainSizeValue;
 
     /**
-     * Check the $value is valid
-     *
-     * @param mixed $value
-     * @return bool
+     * @var string
      */
+    protected $message = 'rule.min';
+
+    /**
+     * @var array
+     */
+    protected $fillableParams = ['min'];
+
     public function check($value): bool
     {
-        $this->requireParameters($this->fillableParams);
+        $this->assertHasRequiredParameters($this->fillableParams);
 
-        $min = $this->getBytesSize($this->parameter('min'));
+        $min = $this->getSizeInBytes($this->parameter('min'));
         $valueSize = $this->getValueSize($value);
 
         if (!is_numeric($valueSize)) {

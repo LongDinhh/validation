@@ -1,44 +1,48 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Coccoc\Validation;
 
-class ErrorBag
-{
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
 
-    /** @var array */
-    protected $messages = [];
+/**
+ * Class ErrorBag
+ *
+ * @package    Coccoc\Validation
+ * @subpackage Coccoc\Validation\ErrorBag
+ */
+class ErrorBag implements Countable, IteratorAggregate
+{
+    /**
+     * @var $errors
+     */
+    public $errors;
 
     /**
-     * Constructor
-     *
-     * @param array $messages
-     * @return void
+     * ErrorBag constructor.
+     * @param array $errors
      */
-    public function __construct(array $messages = [])
+    public function __construct(array $errors = [])
     {
-        $this->messages = $messages;
+        foreach ($errors as $key => $rules) {
+            foreach ($rules as $rule => $error) {
+                $this->add($key, $rule, $error);
+            }
+        }
     }
 
     /**
-     * Add message for given key and rule
-     *
      * @param string $key
      * @param string $rule
-     * @param string $message
-     * @return void
+     * @param ErrorMessage $message
      */
-    public function add(string $key, string $rule, string $message)
+    public function add(string $key, string $rule, ErrorMessage $message): void
     {
-        if (!isset($this->messages[$key])) {
-            $this->messages[$key] = [];
-        }
-
-        $this->messages[$key][$rule] = $message;
+        $this->errors[$key][$rule] = $message;
     }
 
     /**
-     * Get messages count
-     *
      * @return int
      */
     public function count(): int
@@ -47,183 +51,105 @@ class ErrorBag
     }
 
     /**
-     * Check given key is existed
-     *
-     * @param string $key
-     * @return bool
+     * @return ArrayIterator
      */
-    public function has(string $key): bool
+    public function getIterator(): ArrayIterator
     {
-        list($key, $ruleName) = $this->parsekey($key);
-        if ($this->isWildcardKey($key)) {
-            $messages = $this->filterMessagesForWildcardKey($key, $ruleName);
-            return count(Helper::arrayDot($messages)) > 0;
-        } else {
-            $messages = isset($this->messages[$key])? $this->messages[$key] : null;
-
-            if (!$ruleName) {
-                return !empty($messages);
-            } else {
-                return !empty($messages) and isset($messages[$ruleName]);
-            }
-        }
+        return new ArrayIterator($this->all());
     }
 
     /**
-     * Get the first value of array
-     *
-     * @param string $key
-     * @return mixed
-     */
-    public function first(string $key)
-    {
-        list($key, $ruleName) = $this->parsekey($key);
-        if ($this->isWildcardKey($key)) {
-            $messages = $this->filterMessagesForWildcardKey($key, $ruleName);
-            $flattenMessages = Helper::arrayDot($messages);
-            return array_shift($flattenMessages);
-        } else {
-            $keyMessages = isset($this->messages[$key])? $this->messages[$key] : [];
-
-            if (empty($keyMessages)) {
-                return null;
-            }
-
-            if ($ruleName) {
-                return isset($keyMessages[$ruleName])? $keyMessages[$ruleName] : null;
-            } else {
-                return array_shift($keyMessages);
-            }
-        }
-    }
-
-    /**
-     * Get messages from given key, can be use custom format
-     *
-     * @param string $key
-     * @param string $format
-     * @return array
-     */
-    public function get(string $key, string $format = ':message'): array
-    {
-        list($key, $ruleName) = $this->parsekey($key);
-        $results = [];
-        if ($this->isWildcardKey($key)) {
-            $messages = $this->filterMessagesForWildcardKey($key, $ruleName);
-            foreach ($messages as $explicitKey => $keyMessages) {
-                foreach ($keyMessages as $rule => $message) {
-                    $results[$explicitKey][$rule] = $this->formatMessage($message, $format);
-                }
-            }
-        } else {
-            $keyMessages = isset($this->messages[$key])? $this->messages[$key] : [];
-            foreach ($keyMessages as $rule => $message) {
-                if ($ruleName and $ruleName != $rule) {
-                    continue;
-                }
-                $results[$rule] = $this->formatMessage($message, $format);
-            }
-        }
-
-        return $results;
-    }
-
-    /**
-     * Get all messages
-     *
      * @param string $format
      * @return array
      */
     public function all(string $format = ':message'): array
     {
-        $messages = $this->messages;
         $results = [];
-        foreach ($messages as $key => $keyMessages) {
+
+        foreach ($this->errors as $keyMessages) {
             foreach ($keyMessages as $message) {
                 $results[] = $this->formatMessage($message, $format);
             }
         }
+
         return $results;
     }
 
     /**
-     * Get the first message from existing keys
-     *
+     * @param ErrorMessage $message
      * @param string $format
-     * @param boolean $dotNotation
-     * @return array
+     * @return string
      */
-    public function firstOfAll(string $format = ':message', bool $dotNotation = false): array
+    private function formatMessage(ErrorMessage $message, string $format): string
     {
-        $messages = $this->messages;
-        $results = [];
-        foreach ($messages as $key => $keyMessages) {
-            if ($dotNotation) {
-                $results[$key] = $this->formatMessage(array_shift($messages[$key]), $format);
+        return str_replace(':message', (string)$message, $format);
+    }
+
+    /**
+     * @param string $key
+     * @return bool
+     */
+    public function has(string $key): bool
+    {
+        [$key, $ruleName] = $this->parsekey($key);
+
+        if ($this->isWildcardKey($key)) {
+            $messages = $this->filterMessagesForWildcardKey($key, $ruleName);
+
+            return count(Helper::arrayDot($messages)) > 0;
+        } else {
+            $messages = $this->errors[$key] ?? null;
+
+            if (!$ruleName) {
+                return !empty($messages);
             } else {
-                Helper::arraySet($results, $key, $this->formatMessage(array_shift($messages[$key]), $format));
+                return !empty($messages) && isset($messages[$ruleName]);
             }
         }
-        return $results;
     }
 
     /**
-     * Get plain array messages
-     *
-     * @return array
-     */
-    public function toArray(): array
-    {
-        return $this->messages;
-    }
-
-    /**
-     * Parse $key to get the array of $key and $ruleName
-     *
      * @param string $key
      * @return array
      */
-    protected function parseKey(string $key): array
+    private function parseKey(string $key): array
     {
         $expl = explode(':', $key, 2);
         $key = $expl[0];
-        $ruleName = isset($expl[1])? $expl[1] : null;
+        $ruleName = $expl[1] ?? null;
+
         return [$key, $ruleName];
     }
 
     /**
-     * Check the $key is wildcard
-     *
-     * @param mixed $key
+     * @param string $key
      * @return bool
      */
-    protected function isWildcardKey(string $key): bool
+    private function isWildcardKey(string $key): bool
     {
-        return false !== strpos($key, '*');
+        return strpos($key, '*') !== false;
     }
 
     /**
-     * Filter messages with wildcard key
-     *
      * @param string $key
-     * @param mixed  $ruleName
+     * @param null $ruleName
      * @return array
      */
-    protected function filterMessagesForWildcardKey(string $key, $ruleName = null): array
+    private function filterMessagesForWildcardKey(string $key, $ruleName = null): array
     {
-        $messages = $this->messages;
+        $messages = $this->errors;
         $pattern = preg_quote($key, '#');
         $pattern = str_replace('\*', '.*', $pattern);
 
         $filteredMessages = [];
 
         foreach ($messages as $k => $keyMessages) {
-            if ((bool) preg_match('#^'.$pattern.'\z#u', $k) === false) {
+            if ((bool)preg_match('#^' . $pattern . '\z#u', $k) === false) {
                 continue;
             }
 
             foreach ($keyMessages as $rule => $message) {
-                if ($ruleName and $rule != $ruleName) {
+                if ($ruleName && $rule != $ruleName) {
                     continue;
                 }
                 $filteredMessages[$k][$rule] = $message;
@@ -234,14 +160,103 @@ class ErrorBag
     }
 
     /**
-     * Get formatted message
-     *
-     * @param string $message
-     * @param string $format
-     * @return string
+     * @param string $key
+     * @return string|null
      */
-    protected function formatMessage(string $message, string $format): string
+    public function first(string $key): ?string
     {
-        return str_replace(':message', $message, $format);
+        [$key, $ruleName] = $this->parsekey($key);
+
+        if ($this->isWildcardKey($key)) {
+            $messages = $this->filterMessagesForWildcardKey($key, $ruleName);
+            $flattenMessages = Helper::arrayDot($messages);
+
+            $ret = array_shift($flattenMessages);
+        } else {
+            $keyMessages = $this->errors[$key] ?? [];
+
+            if (empty($keyMessages)) {
+                return null;
+            }
+
+            if ($ruleName) {
+                $ret = $keyMessages[$ruleName] ?? null;
+            } else {
+                $ret = array_shift($keyMessages);
+            }
+        }
+
+        return !is_null($ret) ? (string)$ret : null;
+    }
+
+    /**
+     * @param string $key
+     * @param string $format
+     * @return array
+     */
+    public function get(string $key, string $format = ':message'): array
+    {
+        [$key, $ruleName] = $this->parsekey($key);
+
+        $results = [];
+
+        if ($this->isWildcardKey($key)) {
+            $messages = $this->filterMessagesForWildcardKey($key, $ruleName);
+
+            foreach ($messages as $explicitKey => $keyMessages) {
+                foreach ($keyMessages as $rule => $message) {
+                    $results[$explicitKey][$rule] = $this->formatMessage($message, $format);
+                }
+            }
+        } else {
+            $keyMessages = $this->errors[$key] ?? [];
+
+            foreach ($keyMessages as $rule => $message) {
+                if ($ruleName && $ruleName != $rule) {
+                    continue;
+                }
+
+                $results[$rule] = $this->formatMessage($message, $format);
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param string $format
+     * @param bool $dotNotation
+     * @return array
+     */
+    public function firstOfAll(string $format = ':message', bool $dotNotation = false): array
+    {
+        $messages = $this->errors;
+        $results = [];
+
+        foreach ($messages as $key => $keyMessages) {
+            if ($dotNotation) {
+                $results[$key] = $this->formatMessage(array_shift($messages[$key]), $format);
+            } else {
+                Helper::arraySet($results, $key, $this->formatMessage(array_shift($messages[$key]), $format));
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return $this->errors;
+    }
+
+    /**
+     * @return DataBag
+     */
+    public function toDataBag(): DataBag
+    {
+        return new DataBag($this->errors);
     }
 }
