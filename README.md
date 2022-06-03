@@ -1,10 +1,4 @@
-# Somnambulist Validation
-
-[![GitHub Actions Build Status](https://img.shields.io/github/workflow/status/somnambulist-tech/validation/tests?logo=github)](https://github.com/somnambulist-tech/validation/actions?query=workflow%3Atests)
-[![Issues](https://img.shields.io/github/issues/somnambulist-tech/validation?logo=github)](https://github.com/somnambulist-tech/validation/issues)
-[![License](https://img.shields.io/github/license/somnambulist-tech/validation?logo=github)](https://github.com/somnambulist-tech/validation/blob/master/LICENSE)
-[![PHP Version](https://img.shields.io/packagist/php-v/somnambulist/validation?logo=php&logoColor=white)](https://packagist.org/packages/somnambulist/validation)
-[![Current Version](https://img.shields.io/packagist/v/somnambulist/validation?logo=packagist&logoColor=white)](https://packagist.org/packages/somnambulist/validation)
+# Validation
 
 This is a re-write of [rakit/validation](https://github.com/rakit/validation), a standalone validator like Laravel Validation.
 In keeping with rakit/validation, this library does not have any other dependencies for usage.
@@ -15,14 +9,14 @@ Jump to [rules](#available-rules)
 
 ## Requirements
 
- * PHP 8.0+
+ * PHP 7.2+
  * ext/mb-string
 
 ## Installation
 
 Install using composer, or checkout / pull the files from github.com.
 
- * composer require somnambulist/validation
+ * composer require longdinhh/validation
 
 ## Usage
 
